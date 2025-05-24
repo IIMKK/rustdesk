@@ -117,7 +117,8 @@ pub fn start(args: &mut [String]) {
         //frame.register_behavior("connection-manager", move || {
         //    Box::new(cm::SciterConnectionManager::new())
         //});
-        //page = "cm.html";
+		let _ = cm::SciterConnectionManager::new();
+        page = "cm.html";
     } else if (args[0] == "--connect"
         || args[0] == "--file-transfer"
         || args[0] == "--port-forward"
