@@ -32,7 +32,7 @@ class ServerModel with ChangeNotifier {
   bool _fileOk = false;
   bool _clipboardOk = false;
   bool _showElevation = false;
-  bool hideCm = true;
+  bool hideCm = false;
   int _connectStatus = 0; // Rendezvous Server status
   String _verificationMethod = "";
   String _temporaryPasswordLength = "";
@@ -132,10 +132,9 @@ class ServerModel with ChangeNotifier {
   ServerModel(this.parent) {
     _emptyIdShow = translate("Generating ...");
     _serverId = IDTextEditingController(text: _emptyIdShow);
-	hideCm = true; // 确保构造函数中初始化
+
     /*
     // initital _hideCm at startup
-    
     final verificationMethod =
         bind.mainGetOptionSync(key: kOptionVerificationMethod);
     final approveMode = bind.mainGetOptionSync(key: kOptionApproveMode);
@@ -292,9 +291,6 @@ class ServerModel with ChangeNotifier {
       update = true;
     }
     */
-	if (desktopType == DesktopType.cm) {
-	  await hideCmWindow();
-	}
     if (update) {
       notifyListeners();
     }
