@@ -43,7 +43,7 @@ impl InvokeUiCM for SciterHandler {
     }
 
     fn new_message(&self, id: i32, text: String) {
-        self.call("newMessage", &make_args!(id, text));
+        //self.call("newMessage", &make_args!(id, text));
     }
 
     fn change_theme(&self, _dark: String) {

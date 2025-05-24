@@ -32,7 +32,7 @@ class ServerModel with ChangeNotifier {
   bool _fileOk = false;
   bool _clipboardOk = false;
   bool _showElevation = false;
-  bool hideCm = true;
+  bool hideCm = false;
   int _connectStatus = 0; // Rendezvous Server status
   String _verificationMethod = "";
   String _temporaryPasswordLength = "";
@@ -169,7 +169,7 @@ class ServerModel with ChangeNotifier {
             }
           } else {
             _zeroClientLengthCounter = 0;
-            if (!hideCm) hideCmWindow();
+            if (!hideCm) showCmWindow();
           }
         }
       }
@@ -543,7 +543,7 @@ class ServerModel with ChangeNotifier {
       if (_clients.isEmpty) {
         hideCmWindow();
       } else if (!hideCm) {
-        hideCmWindow();
+        showCmWindow();
       }
     }
     if (_clients.length != oldClientLenght) {
@@ -578,7 +578,7 @@ class ServerModel with ChangeNotifier {
         tabController.remove(index_disconnected);
       }
       if (desktopType == DesktopType.cm && !hideCm) {
-        hideCmWindow();
+        showCmWindow();
       }
       scrollToBottom();
       notifyListeners();

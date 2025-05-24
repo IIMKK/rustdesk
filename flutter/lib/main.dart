@@ -313,7 +313,7 @@ showCmWindow({bool isStartup = false}) async {
   }
 }
 
-hideCmWindow({bool isStartup = true}) async {
+hideCmWindow({bool isStartup = false}) async {
   if (isStartup) {
     WindowOptions windowOptions = getHiddenTitleBarWindowOptions(
         size: kConnectionManagerWindowSizeClosedChat);
