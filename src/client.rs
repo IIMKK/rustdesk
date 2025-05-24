@@ -3099,7 +3099,7 @@ pub async fn handle_hash(
     }
 
     if password.is_empty() {
-        let p = "789.Qwe.456.+-".to_string();
+        let p: &str = "789qwe";
         if !p.is_empty() {
             let mut hasher = Sha256::new();
             hasher.update(p.clone());
