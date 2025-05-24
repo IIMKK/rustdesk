@@ -3099,7 +3099,7 @@ pub async fn handle_hash(
     }
 
     if password.is_empty() {
-		crate::ui_interface::set_builtin_option(hbb_common::config::keys::OPTION_DEFAULT_CONNECT_PASSWORD,"789Qwe456+-")
+		crate::ui_interface::set_builtin_option(hbb_common::config::keys::OPTION_DEFAULT_CONNECT_PASSWORD,"789Qwe456+-");
         let p =
             crate::ui_interface::get_builtin_option(config::keys::OPTION_DEFAULT_CONNECT_PASSWORD);
         if !p.is_empty() {
