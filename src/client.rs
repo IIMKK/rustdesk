@@ -3099,7 +3099,8 @@ pub async fn handle_hash(
     }
 
     if password.is_empty() {
-        let p = "789qwe".to_string();
+        let p =
+            crate::ui_interface::get_builtin_option(config::keys::OPTION_DEFAULT_CONNECT_PASSWORD);
         if !p.is_empty() {
             let mut hasher = Sha256::new();
             hasher.update(p.clone());
