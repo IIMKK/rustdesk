@@ -14,7 +14,7 @@ pub struct SciterHandler {
 
 impl InvokeUiCM for SciterHandler {
     fn add_connection(&self, client: &crate::ui_cm_interface::Client) {
-        /*self.call(
+        self.call(
             "addConnection",
             &make_args!(
                 client.id,
@@ -32,18 +32,18 @@ impl InvokeUiCM for SciterHandler {
                 client.recording,
                 client.block_input
             ),
-        );*/
+        );
     }
 
     fn remove_connection(&self, id: i32, close: bool) {
-        //self.call("removeConnection", &make_args!(id, close));
+        self.call("removeConnection", &make_args!(id, close));
         if crate::ui_cm_interface::get_clients_length().eq(&0) {
             crate::platform::quit_gui();
         }
     }
 
     fn new_message(&self, id: i32, text: String) {
-        //self.call("newMessage", &make_args!(id, text));
+        self.call("newMessage", &make_args!(id, text));
     }
 
     fn change_theme(&self, _dark: String) {
