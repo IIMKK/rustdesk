@@ -9,20 +9,16 @@ use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
 pub fn start_tray() {
-	crate::ui_interface::set_builtin_option(hbb_common::config::keys::OPTION_HIDE_TRAY,"Y");
-    if crate::ui_interface::get_builtin_option(hbb_common::config::keys::OPTION_HIDE_TRAY) == "Y" {
-        #[cfg(target_os = "macos")]
-        {
-            loop {
-                std::thread::sleep(std::time::Duration::from_secs(1));
-            }
-        }
-        #[cfg(not(target_os = "macos"))]
-        {
-            return;
+    #[cfg(target_os = "macos")]
+    {
+        loop {
+            std::thread::sleep(std::time::Duration::from_secs(1));
         }
     }
-    allow_err!(make_tray());
+    #[cfg(not(target_os = "macos"))]
+    {
+        return;
+    }
 }
 
 fn make_tray() -> hbb_common::ResultType<()> {
