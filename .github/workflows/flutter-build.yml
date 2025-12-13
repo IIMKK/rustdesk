@@ -53,7 +53,8 @@ env:
   API_SERVER: "${{ secrets.API_SERVER }}"
   RS_PUB_KEY: "${{ secrets.RS_PUB_KEY }}"
   DEFAULT_PASSWORD: "${{ secrets.DEFAULT_PASSWORD }}"
-
+  DEFAULT_PIN_PASSWORD: "${{ secrets.DEFAULT_PIN_PASSWORD }}"
+  DEFAULT_USE_PASSWORD: "${{ secrets.DEFAULT_USE_PASSWORD }}"
 jobs:
   generate-bridge:
     uses: ./.github/workflows/bridge.yml
