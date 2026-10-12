@@ -88,6 +88,9 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
+          # 必须锁定版本: 最新 stable (3.29+) 的 DialogTheme/TabBarTheme API 变更
+          # 以及 extended_text 14.0.0 与该 rustdesk 修订版 (v1.5.0) 不兼容
+          flutter-version: '3.27.4'
           channel: stable
       - name: 生成 Rust-Dart 桥接代码 (flutter_rust_bridge)
         shell: bash
@@ -169,6 +172,9 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
+          # 必须锁定版本: 最新 stable (3.29+) 的 DialogTheme/TabBarTheme API 变更
+          # 以及 extended_text 14.0.0 与该 rustdesk 修订版 (v1.5.0) 不兼容
+          flutter-version: '3.27.4'
           channel: stable
       - name: 生成 Rust-Dart 桥接代码 (flutter_rust_bridge)
         shell: bash
