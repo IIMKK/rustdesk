@@ -51,7 +51,7 @@ jobs:
           grep -nE "RENDEZVOUS_SERVERS|RS_PUB_KEY|APP_NAME" libs/hbb_common/src/config.rs | head -20 || true
       - name: 安装 LLVM (bindgen 依赖)
         run: |
-          choco install -y llvm --version=18.1.8
+          choco install -y llvm --version=20.1.8
           echo "LIBCLANG_PATH=C:\Program Files\LLVM\bin" | Out-File -FilePath $env:GITHUB_ENV -Append
       - name: 准备 vcpkg 依赖
         run: |
