@@ -128,7 +128,8 @@ jobs:
           cd flutter/build/windows/x64/runner/Release
           BIN_NAME="${PROCESS_NAME:-$APP_NAME}"
           mv rustdesk.exe "${BIN_NAME}.exe" || true
-          zip -r "${APP_NAME}-windows-x64.zip" .
+          # windows runner 的 Git Bash 没有 zip 命令, 改用自带 bsdtar (按扩展名自动选 zip 格式)
+          tar -a -c -f "${APP_NAME}-windows-x64.zip" .
       - name: 上传产物
         uses: actions/upload-artifact@v4
         with:
@@ -232,7 +233,8 @@ jobs:
           cd flutter/build/windows/x86/runner/Release
           BIN_NAME="${PROCESS_NAME:-$APP_NAME}"
           mv rustdesk.exe "${BIN_NAME}.exe" || true
-          zip -r "${APP_NAME}-windows-x86.zip" .
+          # windows runner 的 Git Bash 没有 zip 命令, 改用自带 bsdtar (按扩展名自动选 zip 格式)
+          tar -a -c -f "${APP_NAME}-windows-x86.zip" .
       - name: 上传产物
         uses: actions/upload-artifact@v4
         with:
