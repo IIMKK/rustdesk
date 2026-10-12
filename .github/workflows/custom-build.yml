@@ -61,18 +61,30 @@ jobs:
       - name: 准备 vcpkg 依赖
         shell: pwsh
         run: |
-          # 幂等克隆: 镜像可能已预装 C:\vcpkg
+          $ErrorActionPreference = 'Stop'
+          # 幂等克隆: 镜像可能已预装 C:\vcpkg; 拉取失败不致命, 用现有版本即可
           if (Test-Path C:\vcpkg\.git) {
             git -C C:\vcpkg pull --ff-only
+            if ($LASTEXITCODE -ne 0) { Write-Host "vcpkg git pull 失败, 使用现有版本继续" }
           } elseif (-not (Test-Path C:\vcpkg)) {
             git clone --depth 1 https://github.com/microsoft/vcpkg C:\vcpkg
+            if ($LASTEXITCODE -ne 0) { throw "克隆 vcpkg 失败" }
           }
           if (-not (Test-Path C:\vcpkg\vcpkg.exe)) {
             C:\vcpkg\bootstrap-vcpkg.bat -disableMetrics
+            if ($LASTEXITCODE -ne 0) { throw "bootstrap vcpkg 失败" }
           }
           echo "VCPKG_ROOT=C:\vcpkg" | Out-File -FilePath $env:GITHUB_ENV -Append
           # rustdesk 仓库根目录有 vcpkg.json, 须强制 classic 模式才能按包名安装
-          C:\vcpkg\vcpkg.exe install --classic libvpx:x64-windows-static libyuv:x64-windows-static opus:x64-windows-static aom:x64-windows-static
+          # pwsh 默认不感知外部命令退出码, 必须逐包检查 $LASTEXITCODE
+          foreach ($p in 'libvpx','libyuv','opus','aom') {
+            C:\vcpkg\vcpkg.exe install --classic "${p}:x64-windows-static"
+            if ($LASTEXITCODE -ne 0) { throw "vcpkg install ${p}:x64-windows-static 失败" }
+          }
+          # 验证 magnum-opus 编译期必需的头文件确实存在
+          if (-not (Test-Path C:\vcpkg\installed\x64-windows-static\include\opus\opus_multistream.h)) {
+            throw "opus 头文件缺失, vcpkg 安装不完整"
+          }
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
@@ -131,18 +143,29 @@ jobs:
       - name: 准备 vcpkg 依赖
         shell: pwsh
         run: |
-          # 幂等克隆: 镜像可能已预装 C:\vcpkg
+          # 幂等克隆: 镜像可能已预装 C:\vcpkg; 拉取失败不致命, 用现有版本即可
           if (Test-Path C:\vcpkg\.git) {
             git -C C:\vcpkg pull --ff-only
+            if ($LASTEXITCODE -ne 0) { Write-Host "vcpkg git pull 失败, 使用现有版本继续" }
           } elseif (-not (Test-Path C:\vcpkg)) {
             git clone --depth 1 https://github.com/microsoft/vcpkg C:\vcpkg
+            if ($LASTEXITCODE -ne 0) { throw "克隆 vcpkg 失败" }
           }
           if (-not (Test-Path C:\vcpkg\vcpkg.exe)) {
             C:\vcpkg\bootstrap-vcpkg.bat -disableMetrics
+            if ($LASTEXITCODE -ne 0) { throw "bootstrap vcpkg 失败" }
           }
           echo "VCPKG_ROOT=C:\vcpkg" | Out-File -FilePath $env:GITHUB_ENV -Append
           # rustdesk 仓库根目录有 vcpkg.json, 须强制 classic 模式才能按包名安装
-          C:\vcpkg\vcpkg.exe install --classic libvpx:x86-windows-static libyuv:x86-windows-static opus:x86-windows-static aom:x86-windows-static
+          # pwsh 默认不感知外部命令退出码, 必须逐包检查 $LASTEXITCODE
+          foreach ($p in 'libvpx','libyuv','opus','aom') {
+            C:\vcpkg\vcpkg.exe install --classic "${p}:x86-windows-static"
+            if ($LASTEXITCODE -ne 0) { throw "vcpkg install ${p}:x86-windows-static 失败" }
+          }
+          # 验证 magnum-opus 编译期必需的头文件确实存在
+          if (-not (Test-Path C:\vcpkg\installed\x86-windows-static\include\opus\opus_multistream.h)) {
+            throw "opus 头文件缺失, vcpkg 安装不完整"
+          }
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
