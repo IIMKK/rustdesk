@@ -92,6 +92,18 @@ jobs:
           # 以及 extended_text 14.0.0 与该 rustdesk 修订版 (v1.5.0) 不兼容
           flutter-version: '3.27.4'
           channel: stable
+      - name: 修正 Flutter 的 VS 生成器检测
+        shell: pwsh
+        run: |
+          # windows-latest 镜像已预装 Visual Studio 2026, 而 flutter 3.27 的
+          # 生成器映射只识别 VS16/17, 遇到 VS2026 会回退到 "Visual Studio 16 2019",
+          # 导致 CMake 找不到 VS2019. 这里把默认生成器改成 VS2022.
+          $vs = "$env:FLUTTER_ROOT\packages\flutter_tools\lib\src\windows\visual_studio.dart"
+          (Get-Content $vs -Raw) -replace "'Visual Studio 16 2019'", "'Visual Studio 17 2022'" |
+            Set-Content $vs -NoNewline -Encoding UTF8
+          # 删除工具快照, 强制 flutter 下次启动时用修改后的源码重新编译
+          Remove-Item "$env:FLUTTER_ROOT\bin\cache\flutter_tools.snapshot" -Force -ErrorAction SilentlyContinue
+          flutter doctor -v
       - name: 生成 Rust-Dart 桥接代码 (flutter_rust_bridge)
         shell: bash
         run: |
@@ -176,6 +188,18 @@ jobs:
           # 以及 extended_text 14.0.0 与该 rustdesk 修订版 (v1.5.0) 不兼容
           flutter-version: '3.27.4'
           channel: stable
+      - name: 修正 Flutter 的 VS 生成器检测
+        shell: pwsh
+        run: |
+          # windows-latest 镜像已预装 Visual Studio 2026, 而 flutter 3.27 的
+          # 生成器映射只识别 VS16/17, 遇到 VS2026 会回退到 "Visual Studio 16 2019",
+          # 导致 CMake 找不到 VS2019. 这里把默认生成器改成 VS2022.
+          $vs = "$env:FLUTTER_ROOT\packages\flutter_tools\lib\src\windows\visual_studio.dart"
+          (Get-Content $vs -Raw) -replace "'Visual Studio 16 2019'", "'Visual Studio 17 2022'" |
+            Set-Content $vs -NoNewline -Encoding UTF8
+          # 删除工具快照, 强制 flutter 下次启动时用修改后的源码重新编译
+          Remove-Item "$env:FLUTTER_ROOT\bin\cache\flutter_tools.snapshot" -Force -ErrorAction SilentlyContinue
+          flutter doctor -v
       - name: 生成 Rust-Dart 桥接代码 (flutter_rust_bridge)
         shell: bash
         run: |
