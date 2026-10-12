@@ -1,0 +1,131 @@
+# ============================================================
+#  RustDK — RustDesk 定制编译流水线
+#  由「RustDesk 定制编译工作台」生成
+#
+#  使用方法:
+#    1. Fork https://github.com/rustdesk/rustdesk 到你的账号
+#    2. 将本文件放入 fork 仓库的 .github/workflows/ 目录
+#    3. 将 customize.py 放到 fork 仓库根目录
+#    4. 推送后进入 Actions 页签手动运行本工作流
+#
+#  注意: 各平台构建步骤依据 rustdesk 官方 flutter-build.yml 精简,
+#        若上游升级导致失败, 请对照官方 workflow 调整依赖版本。
+# ============================================================
+name: "Build RustDK (RustDesk Custom)"
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [master, main]
+    paths: ["customize.py", ".github/workflows/**"]
+
+env:
+  UPSTREAM_REF: "master"
+  # ===== 定制参数 (由工作台生成; 公钥建议改放到仓库 Secrets) =====
+  APP_NAME: "RustDK"
+  RENDEZVOUS_SERVER: "rd.iimkk.cn"
+  RS_PUB_KEY: "789qwe456"
+  API_SERVER: "https://rdapi.iimkk.cn"
+  DEFAULT_PASSWORD: "00PzfB75TNJoQeP2WQsVLzmb1rnCq49O3OYg=="
+  PROCESS_NAME: "RustDK"
+
+jobs:
+  windows-x64:
+    name: Windows x64
+    runs-on: windows-latest
+    steps:
+      - name: Checkout rustdesk (含子模块)
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.UPSTREAM_REF }}
+          submodules: recursive
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+      - name: 应用定制补丁
+        run: python customize.py
+      - name: 显示补丁后的关键配置
+        shell: bash
+        run: |
+          grep -nE "RENDEZVOUS_SERVERS|RS_PUB_KEY|APP_NAME" libs/hbb_common/src/config.rs | head -20 || true
+      - name: 安装 LLVM (bindgen 依赖)
+        run: |
+          choco install -y llvm --version=18.1.8
+          echo "LIBCLANG_PATH=C:\Program Files\LLVM\bin" | Out-File -FilePath $env:GITHUB_ENV -Append
+      - name: 准备 vcpkg 依赖
+        run: |
+          git clone --depth 1 https://github.com/microsoft/vcpkg C:\vcpkg
+          C:\vcpkg\bootstrap-vcpkg.bat
+          echo "VCPKG_ROOT=C:\vcpkg" | Out-File -FilePath $env:GITHUB_ENV -Append
+          C:\vcpkg\vcpkg.exe install libvpx:x64-windows-static libyuv:x64-windows-static opus:x64-windows-static aom:x64-windows-static
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      - name: 编译 (Flutter UI)
+        run: |
+          flutter config --enable-windows-desktop
+          python build.py --flutter
+      - name: 打包产物
+        shell: bash
+        run: |
+          cd flutter/build/windows/x64/runner/Release
+          BIN_NAME="${PROCESS_NAME:-$APP_NAME}"
+          mv rustdesk.exe "${BIN_NAME}.exe" || true
+          zip -r "${APP_NAME}-windows-x64.zip" .
+      - name: 上传产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.APP_NAME }}-windows-x64
+          path: flutter/build/windows/x64/runner/Release/${{ env.APP_NAME }}-windows-x64.zip
+
+  windows-x86:
+    name: Windows x86
+    runs-on: windows-latest
+    steps:
+      - name: Checkout rustdesk (含子模块)
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.UPSTREAM_REF }}
+          submodules: recursive
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+      - name: 应用定制补丁
+        run: python customize.py
+      - name: 显示补丁后的关键配置
+        shell: bash
+        run: |
+          grep -nE "RENDEZVOUS_SERVERS|RS_PUB_KEY|APP_NAME" libs/hbb_common/src/config.rs | head -20 || true
+      - name: 安装 LLVM (bindgen 依赖)
+        run: |
+          choco install -y llvm --version=18.1.8
+          echo "LIBCLANG_PATH=C:\Program Files\LLVM\bin" | Out-File -FilePath $env:GITHUB_ENV -Append
+      - name: 准备 vcpkg 依赖
+        run: |
+          git clone --depth 1 https://github.com/microsoft/vcpkg C:\vcpkg
+          C:\vcpkg\bootstrap-vcpkg.bat
+          echo "VCPKG_ROOT=C:\vcpkg" | Out-File -FilePath $env:GITHUB_ENV -Append
+          C:\vcpkg\vcpkg.exe install libvpx:x86-windows-static libyuv:x86-windows-static opus:x86-windows-static aom:x86-windows-static
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      - name: 编译 (Flutter UI)
+        run: |
+          flutter config --enable-windows-desktop
+          python build.py --flutter
+      - name: 打包产物
+        shell: bash
+        run: |
+          cd flutter/build/windows/x86/runner/Release
+          BIN_NAME="${PROCESS_NAME:-$APP_NAME}"
+          mv rustdesk.exe "${BIN_NAME}.exe" || true
+          zip -r "${APP_NAME}-windows-x86.zip" .
+      - name: 上传产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.APP_NAME }}-windows-x86
+          path: flutter/build/windows/x86/runner/Release/${{ env.APP_NAME }}-windows-x86.zip
