@@ -95,14 +95,22 @@ jobs:
       - name: 修正 Flutter 的 VS 生成器检测
         shell: pwsh
         run: |
+          $ErrorActionPreference = 'Stop'
           # windows-latest 镜像已预装 Visual Studio 2026, 而 flutter 3.27 的
           # 生成器映射只识别 VS16/17, 遇到 VS2026 会回退到 "Visual Studio 16 2019",
           # 导致 CMake 找不到 VS2019. 这里把默认生成器改成 VS2022.
           $vs = "$env:FLUTTER_ROOT\packages\flutter_tools\lib\src\windows\visual_studio.dart"
+          if (-not (Test-Path $vs)) { throw "找不到 flutter 工具源码: $vs" }
+          $before = (Select-String -Path $vs -Pattern "Visual Studio 16 2019").Count
+          Write-Host "替换前 VS2019 出现次数: $before"
           (Get-Content $vs -Raw) -replace "'Visual Studio 16 2019'", "'Visual Studio 17 2022'" |
             Set-Content $vs -NoNewline -Encoding UTF8
-          # 删除工具快照, 强制 flutter 下次启动时用修改后的源码重新编译
-          Remove-Item "$env:FLUTTER_ROOT\bin\cache\flutter_tools.snapshot" -Force -ErrorAction SilentlyContinue
+          $after = (Select-String -Path $vs -Pattern "Visual Studio 16 2019").Count
+          $new = (Select-String -Path $vs -Pattern "Visual Studio 17 2022").Count
+          Write-Host "替换后 VS2019 残留: $after, VS2022 出现: $new"
+          if ($new -eq 0) { throw "补丁未生效: flutter 3.27 的 visual_studio.dart 结构与预期不符" }
+          # 删除工具快照和 stamp, 强制 flutter 下次启动时用修改后的源码重新编译
+          Remove-Item "$env:FLUTTER_ROOT\bin\cache\flutter_tools.snapshot","$env:FLUTTER_ROOT\bin\cache\flutter_tools.stamp" -Force -ErrorAction SilentlyContinue
           flutter doctor -v
       - name: 生成 Rust-Dart 桥接代码 (flutter_rust_bridge)
         shell: bash
@@ -191,14 +199,22 @@ jobs:
       - name: 修正 Flutter 的 VS 生成器检测
         shell: pwsh
         run: |
+          $ErrorActionPreference = 'Stop'
           # windows-latest 镜像已预装 Visual Studio 2026, 而 flutter 3.27 的
           # 生成器映射只识别 VS16/17, 遇到 VS2026 会回退到 "Visual Studio 16 2019",
           # 导致 CMake 找不到 VS2019. 这里把默认生成器改成 VS2022.
           $vs = "$env:FLUTTER_ROOT\packages\flutter_tools\lib\src\windows\visual_studio.dart"
+          if (-not (Test-Path $vs)) { throw "找不到 flutter 工具源码: $vs" }
+          $before = (Select-String -Path $vs -Pattern "Visual Studio 16 2019").Count
+          Write-Host "替换前 VS2019 出现次数: $before"
           (Get-Content $vs -Raw) -replace "'Visual Studio 16 2019'", "'Visual Studio 17 2022'" |
             Set-Content $vs -NoNewline -Encoding UTF8
-          # 删除工具快照, 强制 flutter 下次启动时用修改后的源码重新编译
-          Remove-Item "$env:FLUTTER_ROOT\bin\cache\flutter_tools.snapshot" -Force -ErrorAction SilentlyContinue
+          $after = (Select-String -Path $vs -Pattern "Visual Studio 16 2019").Count
+          $new = (Select-String -Path $vs -Pattern "Visual Studio 17 2022").Count
+          Write-Host "替换后 VS2019 残留: $after, VS2022 出现: $new"
+          if ($new -eq 0) { throw "补丁未生效: flutter 3.27 的 visual_studio.dart 结构与预期不符" }
+          # 删除工具快照和 stamp, 强制 flutter 下次启动时用修改后的源码重新编译
+          Remove-Item "$env:FLUTTER_ROOT\bin\cache\flutter_tools.snapshot","$env:FLUTTER_ROOT\bin\cache\flutter_tools.stamp" -Force -ErrorAction SilentlyContinue
           flutter doctor -v
       - name: 生成 Rust-Dart 桥接代码 (flutter_rust_bridge)
         shell: bash
