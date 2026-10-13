@@ -81,9 +81,21 @@ jobs:
             C:\vcpkg\vcpkg.exe install --classic "${p}:x64-windows-static"
             if ($LASTEXITCODE -ne 0) { throw "vcpkg install ${p}:x64-windows-static 失败" }
           }
-          # 验证 magnum-opus 编译期必需的头文件确实存在
-          if (-not (Test-Path C:\vcpkg\installed\x64-windows-static\include\opus\opus_multistream.h)) {
-            throw "opus 头文件缺失, vcpkg 安装不完整"
+          # 验证 scrap/magnum-opus 编译期必需的头文件确实存在
+          $need = 'C:\vcpkg\installed\x64-windows-static\include\opus\opus_multistream.h',
+                  'C:\vcpkg\installed\x64-windows-static\include\vpx\vp8.h'
+          $missing = $need | Where-Object { -not (Test-Path $_) }
+          if ($missing) {
+            Write-Host "缺少头文件: $missing, 尝试强制重装..."
+            foreach ($p in 'libvpx','libyuv','opus','aom') {
+              C:\vcpkg\vcpkg.exe install --classic --recurse "${p}:x64-windows-static"
+              if ($LASTEXITCODE -ne 0) { throw "重装 ${p}:x64-windows-static 仍失败" }
+            }
+            $missing = $need | Where-Object { -not (Test-Path $_) }
+            if ($missing) {
+              Get-ChildItem 'C:\vcpkg\installed\x64-windows-static\include' -Recurse -ErrorAction SilentlyContinue | Select-Object -First 30 FullName
+              throw "重装后仍缺少头文件: $missing"
+            }
           }
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
@@ -128,8 +140,7 @@ jobs:
           cd flutter/build/windows/x64/runner/Release
           BIN_NAME="${PROCESS_NAME:-$APP_NAME}"
           mv rustdesk.exe "${BIN_NAME}.exe" || true
-          # windows runner 的 Git Bash 没有 zip 命令, 改用自带 bsdtar (按扩展名自动选 zip 格式)
-          tar -a -c -f "${APP_NAME}-windows-x64.zip" .
+          zip -r "${APP_NAME}-windows-x64.zip" .
       - name: 上传产物
         uses: actions/upload-artifact@v4
         with:
@@ -186,9 +197,21 @@ jobs:
             C:\vcpkg\vcpkg.exe install --classic "${p}:x86-windows-static"
             if ($LASTEXITCODE -ne 0) { throw "vcpkg install ${p}:x86-windows-static 失败" }
           }
-          # 验证 magnum-opus 编译期必需的头文件确实存在
-          if (-not (Test-Path C:\vcpkg\installed\x86-windows-static\include\opus\opus_multistream.h)) {
-            throw "opus 头文件缺失, vcpkg 安装不完整"
+          # 验证 scrap/magnum-opus 编译期必需的头文件确实存在
+          $need = 'C:\vcpkg\installed\x86-windows-static\include\opus\opus_multistream.h',
+                  'C:\vcpkg\installed\x86-windows-static\include\vpx\vp8.h'
+          $missing = $need | Where-Object { -not (Test-Path $_) }
+          if ($missing) {
+            Write-Host "缺少头文件: $missing, 尝试强制重装..."
+            foreach ($p in 'libvpx','libyuv','opus','aom') {
+              C:\vcpkg\vcpkg.exe install --classic --recurse "${p}:x86-windows-static"
+              if ($LASTEXITCODE -ne 0) { throw "重装 ${p}:x86-windows-static 仍失败" }
+            }
+            $missing = $need | Where-Object { -not (Test-Path $_) }
+            if ($missing) {
+              Get-ChildItem 'C:\vcpkg\installed\x86-windows-static\include' -Recurse -ErrorAction SilentlyContinue | Select-Object -First 30 FullName
+              throw "重装后仍缺少头文件: $missing"
+            }
           }
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
@@ -233,8 +256,7 @@ jobs:
           cd flutter/build/windows/x86/runner/Release
           BIN_NAME="${PROCESS_NAME:-$APP_NAME}"
           mv rustdesk.exe "${BIN_NAME}.exe" || true
-          # windows runner 的 Git Bash 没有 zip 命令, 改用自带 bsdtar (按扩展名自动选 zip 格式)
-          tar -a -c -f "${APP_NAME}-windows-x86.zip" .
+          zip -r "${APP_NAME}-windows-x86.zip" .
       - name: 上传产物
         uses: actions/upload-artifact@v4
         with:
