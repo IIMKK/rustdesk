@@ -140,7 +140,8 @@ jobs:
           cd flutter/build/windows/x64/runner/Release
           BIN_NAME="${PROCESS_NAME:-$APP_NAME}"
           mv rustdesk.exe "${BIN_NAME}.exe" || true
-          zip -r "${APP_NAME}-windows-x64.zip" .
+          # windows runner 的 Git Bash 没有 zip 命令, 改用自带 bsdtar (按扩展名自动选 zip 格式)
+          tar -a -c -f "${APP_NAME}-windows-x64.zip" .
       - name: 上传产物
         uses: actions/upload-artifact@v4
         with:
@@ -178,6 +179,7 @@ jobs:
       - name: 准备 vcpkg 依赖
         shell: pwsh
         run: |
+          $ErrorActionPreference = 'Stop'
           # 幂等克隆: 镜像可能已预装 C:\vcpkg; 拉取失败不致命, 用现有版本即可
           if (Test-Path C:\vcpkg\.git) {
             git -C C:\vcpkg pull --ff-only
@@ -194,22 +196,22 @@ jobs:
           # rustdesk 仓库根目录有 vcpkg.json, 须强制 classic 模式才能按包名安装
           # pwsh 默认不感知外部命令退出码, 必须逐包检查 $LASTEXITCODE
           foreach ($p in 'libvpx','libyuv','opus','aom') {
-            C:\vcpkg\vcpkg.exe install --classic "${p}:x86-windows-static"
-            if ($LASTEXITCODE -ne 0) { throw "vcpkg install ${p}:x86-windows-static 失败" }
+            C:\vcpkg\vcpkg.exe install --classic "${p}:x64-windows-static"
+            if ($LASTEXITCODE -ne 0) { throw "vcpkg install ${p}:x64-windows-static 失败" }
           }
           # 验证 scrap/magnum-opus 编译期必需的头文件确实存在
-          $need = 'C:\vcpkg\installed\x86-windows-static\include\opus\opus_multistream.h',
-                  'C:\vcpkg\installed\x86-windows-static\include\vpx\vp8.h'
+          $need = 'C:\vcpkg\installed\x64-windows-static\include\opus\opus_multistream.h',
+                  'C:\vcpkg\installed\x64-windows-static\include\vpx\vp8.h'
           $missing = $need | Where-Object { -not (Test-Path $_) }
           if ($missing) {
             Write-Host "缺少头文件: $missing, 尝试强制重装..."
             foreach ($p in 'libvpx','libyuv','opus','aom') {
-              C:\vcpkg\vcpkg.exe install --classic --recurse "${p}:x86-windows-static"
-              if ($LASTEXITCODE -ne 0) { throw "重装 ${p}:x86-windows-static 仍失败" }
+              C:\vcpkg\vcpkg.exe install --classic --recurse "${p}:x64-windows-static"
+              if ($LASTEXITCODE -ne 0) { throw "重装 ${p}:x64-windows-static 仍失败" }
             }
             $missing = $need | Where-Object { -not (Test-Path $_) }
             if ($missing) {
-              Get-ChildItem 'C:\vcpkg\installed\x86-windows-static\include' -Recurse -ErrorAction SilentlyContinue | Select-Object -First 30 FullName
+              Get-ChildItem 'C:\vcpkg\installed\x64-windows-static\include' -Recurse -ErrorAction SilentlyContinue | Select-Object -First 30 FullName
               throw "重装后仍缺少头文件: $missing"
             }
           }
@@ -256,7 +258,8 @@ jobs:
           cd flutter/build/windows/x86/runner/Release
           BIN_NAME="${PROCESS_NAME:-$APP_NAME}"
           mv rustdesk.exe "${BIN_NAME}.exe" || true
-          zip -r "${APP_NAME}-windows-x86.zip" .
+          # windows runner 的 Git Bash 没有 zip 命令, 改用自带 bsdtar (按扩展名自动选 zip 格式)
+          tar -a -c -f "${APP_NAME}-windows-x86.zip" .
       - name: 上传产物
         uses: actions/upload-artifact@v4
         with:
